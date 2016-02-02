@@ -3,7 +3,6 @@ import java.util.Random;
 public class MyAgent extends Agent
 {
     Random r;
-
     /**
      * Constructs a new agent, giving it the game and telling it whether it is Red or Yellow.
      * 
@@ -37,15 +36,13 @@ public class MyAgent extends Agent
      */
     public void move()
     {
-        if (iCanWin() > -1)
+        if (redCanWin() > -1)
         {
-            moveOnColumn(iCanWin());
-            System.out.println("I can win");
+            moveOnColumn(redCanWin());
         }
-        else if(theyCanWin() > -1)
+        else if(yellowCanWin() > -1)
         {
-            moveOnColumn(theyCanWin());
-            System.out.println("They can win");
+            moveOnColumn(yellowCanWin());
         }
         else
         {
@@ -87,7 +84,7 @@ public class MyAgent extends Agent
      */
     public int getLowestEmptyIndex(Connect4Column column) {
         int lowestEmptySlot = -1;
-        for  (int i = 0; i < column.getRowCount(); i++)
+        for(int i = 0; i < column.getRowCount(); i++)
         {
             if (!column.getSlot(i).getIsFilled())
             {
@@ -122,38 +119,28 @@ public class MyAgent extends Agent
      *
      * @return the column that would allow the agent to win.
      */
-    public int iCanWin()
+    public int redCanWin()
     {
-        int pos = -1;
-        for (int i = 0; i < myGame.getColumnCount(); i++)
+        boolean iAmRed = true;
+        for(int col = 0; col < myGame.getColumnCount(); col++)
         {
-            for (int j = 5; j >= 0; j--)
-            {
-                if(myGame.getColumn(i).getSlot(j).getIsRed())
+            int blankSlot = getLowestEmptyIndex(myGame.getColumn(col));
+            if(myGame.getColumn(blankSlot) != null) {
+                if(checkHorizontalWin(iAmRed, col, blankSlot) > -1)
                 {
-                    if(i <= myGame.getColumnCount() / 2 && j >= myGame.getRowCount() / 2) 
-                    {
-                        if(checkRight(i, j, true) > -1)
-                        {
-                            pos = checkRight(i, j, true);
-                        }
-                    }
-//                     if(checkVerticalWin(i, j) > -1)
-//                     {
-//                         pos = i;
-//                     }
-//                     else if(checkHorizontalWin(i, j, true) > -1)
-//                     {
-//                         pos = checkHorizontalWin(i, j, true);
-//                     }
-//                     else if(checkDiagonalWin(i, j, true) > -1)
-//                     {
-//                         pos = checkDiagonalWin(i, j, true);
-//                     }
+                    return checkHorizontalWin(iAmRed, col, blankSlot);
+                }
+                if(checkVerticalWin(iAmRed, col, blankSlot) > -1)
+                {
+                    return checkVerticalWin(iAmRed, col, blankSlot);
+                }
+                if(checkDiagonalWin(iAmRed, col, blankSlot) > -1)
+                {
+                    return checkDiagonalWin(iAmRed, col, blankSlot);
                 }
             }
         }
-        return pos;
+        return -1;
     }
 
     /**
@@ -165,310 +152,265 @@ public class MyAgent extends Agent
      *
      * @return the column that would allow the opponent to win.
      */
-    public int theyCanWin()
+    public int yellowCanWin()
     {
-        int pos = -1;
-        for (int i = 0; i < myGame.getColumnCount(); i++)
+        boolean iAmRed = false;
+        for(int col = 0; col < myGame.getColumnCount(); col++)
         {
-            for (int j = 0; j < myGame.getRowCount(); j++)
+            int blankSlot = getLowestEmptyIndex(myGame.getColumn(col));
+            if(blankSlot < 0)
             {
-                if(myGame.getColumn(i).getSlot(j).getIsFilled() &&
-                   !myGame.getColumn(i).getSlot(j).getIsRed())
-                {
-                    if(checkVerticalWin(i, j) > -1)
-                    {
-                        pos = i;
-                    }
-                    else if(checkHorizontalWin(i, j, false) > -1)
-                    {
-                        pos = checkHorizontalWin(i, j, false);
-                    }
-                    else if(checkDiagonalWin(i, j, false) > -1)
-                    {
-                        pos = checkDiagonalWin(i, j, false);
-                    }
-                }
+                return -1;
             }
-        }
-        return pos;
-    }
-    
-    public int checkRight(int column, int row, boolean iAmRed) 
-    {
-        char[][] board = myGame.getBoardMatrix();
-        int countH = 0;
-        int countV = 0;
-        int countD = 0;
-        for(int i = 0; i <= myGame.getColumnCount() / 2; i++) 
-        {
-           if(board[row][column + i] == 'R')  // Check Horizontal
-           {
-               countH++;
-               if(countH > 2) 
-               {
-                   System.out.println("Looking Horizontal");
-                   return column;
-               }
-           }
-           else if(board[row - i][column] == 'R') // Check Vertical
-           {
-               countV++;
-               if(countV > 2) 
-               {
-                   System.out.println("Looking vertical");
-                   return column;
-               }
-           }
-           else if(board[row - i][column + i] == 'R')  // check Diagonal
-           {
-               countD++;
-               if(countD > 2) 
-               {
-                   System.out.println("Looking diagonal");
-                   return column;
-               }
-           }
+            if(checkHorizontalWin(iAmRed, col, blankSlot) > -1)
+            {
+                return checkHorizontalWin(iAmRed, col, blankSlot);
+            }
+            if(checkVerticalWin(iAmRed, col, blankSlot) > -1)
+            {
+                return checkVerticalWin(iAmRed, col, blankSlot);
+            }
+            if(checkDiagonalWin(iAmRed, col, blankSlot) > -1)
+            {
+                return checkDiagonalWin(iAmRed, col, blankSlot);
+            }
         }
         return -1;
     }
-    
-     /**
-     * Checks to see if there is a possible vertical win
-     * 
-     * @param column is the column for the position being checked
-     * @param row is the row for the position being checked
-     * @return int value of the position to be filled
-     */
-    public int checkVerticalWin(int column, int row)
+
+    public int checkHorizontalWin(boolean iAmRed, int column, int slot)
     {
-        int limit = 3;
-        int countRed = 0;
-        int countYellow = 0;
-        Connect4Column checkCol = myGame.getColumn(column);
-        for(int i = 0; i < limit; i++)
+        if(iAmRed)
         {
-            if(checkCol.getSlot(row - limit) != null &&       // Check for a red chip and make sure that
-               checkCol.getSlot(row - i).getIsRed())          // a possible combination is in bounds.  
+            if(column >= 3) // RRRB
             {
-                countRed++;
-            }
-            else if(checkCol.getSlot(row - limit) != null &&  // Check for a yellow chip and make sure
-                    !checkCol.getSlot(row - i).getIsRed() &&  // that a winning combo is in bounds.
-                    checkCol.getSlot(row - i).getIsFilled())
-            {
-                countYellow++;
-            }
-        }
-        if((countRed > 2 || countYellow > 2) &&               // If there is 3 chips in a row, agent will fill
-           !checkCol.getSlot(row - limit).getIsFilled())      // that column. If blocked by opposite color, agent
-        {                                                     // will continue without dropping chip in column.  
-            return column;
-        }
-        return -1;
-    }
-    
-    /**
-     * Checks for a horizontal win
-     * 
-     * @param column is the column for the position being checked
-     * @param row is the row for the position being checked
-     * @param iAmRed determines if the current chip is Red or Yellow
-     * @return int > 1 if horizontal victory.
-     */
-    public int checkHorizontalWin(int column, int row, boolean iAmRed) throws NullPointerException
-    {
-        int limit = 3;
-        int countRed = 0;
-        int countYellow = 0;
-        boolean inBounds = myGame.getColumn(column + limit) != null;
-        /* If the chip being checked is a red chip, scan the next four spaces for 
-         * any other red chips. If there are chips, then add them to a red counter.
-         * The same applies for yellow chips.
-         */
-        if(inBounds)
-        {
-            try // check from -1 -> 3 for possible combinations of _XXX / X_XX / XX_X / XXX_
-            {
-                for(int i = 0; i <= limit; i++)
+                if(myGame.getColumn(column - 3).getSlot(slot).getIsRed() && myGame.getColumn(column - 3).getSlot(slot).getIsFilled() && myGame.getColumn(column - 2).getSlot(slot).getIsRed() && myGame.getColumn(column - 2).getSlot(slot).getIsFilled() && myGame.getColumn(column - 1).getSlot(slot).getIsRed() && myGame.getColumn(column - 1).getSlot(slot).getIsFilled())
                 {
-                    Connect4Slot slot = myGame.getColumn(i + column).getSlot(row);
-                    boolean red = slot.getIsRed() && iAmRed;
-                    boolean yellow = !slot.getIsRed() && slot.getIsFilled() && !iAmRed;
-                    if(red)           
-                    {
-                        countRed++;
-                    }
-                    else if(yellow)
-                    {
-                        countYellow++;
-                    }
+                    //System.out.println("Checking RRRB at column " + column);
+                    return column;
                 }
             }
-            catch(NullPointerException n) // if column is out of bounds (ie: column 0)
+            if(column <= myGame.getColumnCount() - 4) // BRRR
             {
-                for(int i = 0; i <= limit; i++)
+                if(myGame.getColumn(column + 3).getSlot(slot).getIsRed() && myGame.getColumn(column + 3).getSlot(slot).getIsFilled() && myGame.getColumn(column + 2).getSlot(slot).getIsRed() && myGame.getColumn(column + 2).getSlot(slot).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot).getIsRed() && myGame.getColumn(column + 1).getSlot(slot).getIsFilled())
                 {
-                    Connect4Slot slot = myGame.getColumn(i + column).getSlot(row);
-                    boolean red = slot.getIsRed() && iAmRed;
-                    boolean yellow = !slot.getIsRed() && slot.getIsFilled() && !iAmRed;
-                    if(red)           
-                    {
-                        countRed++;
-                    }
-                    else if(yellow)
-                    {
-                        countYellow++;
-                    }
-                }
-            }  
-        }
-        /* if a scan of 4 spaces yeilds 3 of the same color, scan that sequence and
-         * find the empty slot.
-         */
-        if(countRed > 2 || countYellow > 2)
-        {
-            try // Column 1 - end
-            {
-                for(int i = -1; i <= limit; i++)
-                {
-                    Connect4Slot slot = myGame.getColumn(i + column).getSlot(row);
-                    int lowestIndex = getLowestEmptyIndex(myGame.getColumn(i + column));
-                    boolean blockYellow =  slot.getIsFilled() && !slot.getIsRed() && iAmRed; // Yellow blocks red
-                    boolean blockRed = slot.getIsFilled() && slot.getIsRed() && !iAmRed; // Red blocks yellow
-                    if(!slot.getIsFilled() && lowestIndex == row)
-                    {
-                        return i + column; 
-                    }
-                    else if(blockYellow)
-                    {
-                        i++;
-                    }
-                    else if(blockRed)
-                    {
-                        i++;
-                    }
+                    //System.out.println("Checking BRRR at column " + column);
+                    return column;
                 }
             }
-            catch(NullPointerException n) // column 0 error exception
+            if(column >= 1 && column <= myGame.getColumnCount() - 3) // RBRR
             {
-               for(int i = 0; i <= limit; i++)
-               {
-                    Connect4Slot slot = myGame.getColumn(i + column).getSlot(row);
-                    int lowestIndex = getLowestEmptyIndex(myGame.getColumn(i + column));
-                    boolean blockYellow =  slot.getIsFilled() && !slot.getIsRed() && iAmRed; // Yellow blocks red
-                    boolean blockRed = slot.getIsFilled() && slot.getIsRed() && !iAmRed; // Red blocks yellow
-                    if(!slot.getIsFilled() && lowestIndex == row)
-                    {
-                        return i + column; 
-                    }
-                    else if(blockYellow)
-                    {
-                        i++;
-                    }
-                    else if(blockRed)
-                    {
-                        i++;
-                    }
-               } 
+                if(myGame.getColumn(column - 1).getSlot(slot).getIsRed() && myGame.getColumn(column - 1).getSlot(slot).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot).getIsRed() && myGame.getColumn(column + 1).getSlot(slot).getIsFilled() && myGame.getColumn(column + 2).getSlot(slot).getIsRed() && myGame.getColumn(column + 2).getSlot(slot).getIsFilled())
+                {
+                    //System.out.println("Checking RBRR at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 2 && column <= myGame.getColumnCount() - 2) // RRBR
+            {
+                if(myGame.getColumn(column - 2).getSlot(slot).getIsRed() && myGame.getColumn(column - 2).getSlot(slot).getIsFilled() && myGame.getColumn(column - 1).getSlot(slot).getIsRed() && myGame.getColumn(column - 1).getSlot(slot).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot).getIsRed() && myGame.getColumn(column + 1).getSlot(slot).getIsFilled())
+                {
+                    //System.out.println("Checking RRBR at column " + column);
+                    return column;
+                }
+            }
+        } 
+        if(!iAmRed)
+        {
+            if(column >= 3) // YYYB
+            {
+                if(!myGame.getColumn(column - 3).getSlot(slot).getIsRed() && myGame.getColumn(column - 3).getSlot(slot).getIsFilled() && !myGame.getColumn(column - 2).getSlot(slot).getIsRed() && myGame.getColumn(column - 2).getSlot(slot).getIsFilled() && !myGame.getColumn(column - 1).getSlot(slot).getIsRed() && myGame.getColumn(column - 1).getSlot(slot).getIsFilled())
+                {
+                    return column;
+                }
+            }
+            if(column <= myGame.getColumnCount() - 4) // BYYY
+            {
+                if(!myGame.getColumn(column + 3).getSlot(slot).getIsRed() && myGame.getColumn(column + 3).getSlot(slot).getIsFilled() && !myGame.getColumn(column + 2).getSlot(slot).getIsRed() && myGame.getColumn(column + 2).getSlot(slot).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot).getIsRed() && myGame.getColumn(column + 1).getSlot(slot).getIsFilled())
+                {
+                    return column;
+                }
+            }
+            if(column >= 1 && column <= myGame.getColumnCount() - 3) // YBYY
+            {
+                if(!myGame.getColumn(column - 1).getSlot(slot).getIsRed() && myGame.getColumn(column - 1).getSlot(slot).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot).getIsRed() && myGame.getColumn(column + 1).getSlot(slot).getIsFilled() && !myGame.getColumn(column + 2).getSlot(slot).getIsRed() && myGame.getColumn(column + 2).getSlot(slot).getIsFilled())
+                {
+                    return column;
+                }
+            }
+            if(column >= 2 && column <= myGame.getColumnCount() - 2) // YYBY
+            {
+                if(!myGame.getColumn(column - 2).getSlot(slot).getIsRed() && myGame.getColumn(column - 2).getSlot(slot).getIsFilled() && !myGame.getColumn(column - 1).getSlot(slot).getIsRed() && myGame.getColumn(column - 1).getSlot(slot).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot).getIsRed() && myGame.getColumn(column + 1).getSlot(slot).getIsFilled())
+                {
+                    return column;
+                }
             }
         }
         return -1;
     }
     
-    /**
-     * Checks for a diagonal win
-     * 
-     * @param column is the column for the position being checked
-     * @param row is the row for the position being checked
-     * @param iAmRed determines if the current chip is Red or Yellow
-     * @return int value if there is a possible diagonal win
-     */
-    public int checkDiagonalWin(int column, int row, boolean iAmRed) throws NullPointerException
+    public int checkVerticalWin(boolean iAmRed, int column, int slot) 
     {
-        int limit = 3;
-        int countRed = 0;
-        int countYellow = 0;
-        boolean leftBounds = myGame.getColumn(column + limit) != null && myGame.getColumn(column + limit).getSlot(row - limit) != null;
-        boolean rightBounds = myGame.getColumn(column - limit) != null && myGame.getColumn(column - limit).getSlot(row - limit) != null;
-       // int[][] pos = new int[column][row];
-        if(leftBounds)
+        if(iAmRed) // check red
         {
-           for(int i = 0; i <= limit; i++)
-           {
-               Connect4Slot slot = myGame.getColumn(column + i).getSlot(row - i);
-               boolean red = slot.getIsRed() && iAmRed;
-               boolean yellow = !slot.getIsRed() && slot.getIsFilled() && !iAmRed;
-               if(red)
-               {
-                   countRed++;
-               }
-               else if(yellow)
-               {
-                   countYellow++;
-               }
-           }
-        }
-        else if(rightBounds)
-        {
-           for(int i = -3; i <= 0; i++)
-           {
-               Connect4Slot slot = myGame.getColumn(column + i).getSlot(row + i);
-               boolean red = slot.getIsRed() && iAmRed;
-               boolean yellow = !slot.getIsRed() && slot.getIsFilled() && !iAmRed;
-               if(red)
-               {
-                   countRed++;
-               }
-               else if(yellow)
-               {
-                   countYellow++;
-               }
-           } 
-        }
-        if(countRed > 2 || countYellow > 2)
-        {
-            if(leftBounds)
+            //System.out.println("Vertical red is reached " + slot);
+            if(slot <= myGame.getRowCount() - 4) // Must already have 3 vertical, so only check valid rows for vertical win
             {
-                for(int i = 0; i <= limit; i++)
+                if(myGame.getColumn(column).getSlot(slot + 1).getIsRed() && myGame.getColumn(column).getSlot(slot + 2).getIsRed() && myGame.getColumn(column).getSlot(slot + 3).getIsRed())
                 {
-                    Connect4Slot slot = myGame.getColumn(column + i).getSlot(row - i);
-                    int lowestIndex = getLowestEmptyIndex(myGame.getColumn(i + column));
-                    boolean blockYellow =  slot.getIsFilled() && !slot.getIsRed() && iAmRed; // Yellow blocks red
-                    boolean blockRed = slot.getIsFilled() && slot.getIsRed() && !iAmRed; // Red blocks yellow
-                    if(!slot.getIsFilled() && lowestIndex == row)
-                    {
-                        return i + column; 
-                    }
-                    else if(blockYellow)
-                    {
-                        i++;
-                    }
-                    else if(blockRed)
-                    {
-                        i++;
-                    }
+                    //System.out.println("Red Vertical");
+                    return column;
                 }
             }
-            else if(rightBounds)
+        }
+        if(!iAmRed) // check yellow
+        {
+            //System.out.println("Vertical yellow is reached");
+            if(slot <= myGame.getRowCount() - 4)
             {
-                for(int i = -3; i <= 0; i++)
+                if(!myGame.getColumn(column).getSlot(slot + 1).getIsRed() && myGame.getColumn(column).getSlot(slot + 1).getIsFilled() && !myGame.getColumn(column).getSlot(slot + 2).getIsRed() && myGame.getColumn(column).getSlot(slot + 2).getIsFilled() && !myGame.getColumn(column).getSlot(slot + 3).getIsRed() && myGame.getColumn(column).getSlot(slot + 3).getIsFilled())
                 {
-                    Connect4Slot slot = myGame.getColumn(column + i).getSlot(row + i);
-                    int lowestIndex = getLowestEmptyIndex(myGame.getColumn(i + column));
-                    boolean blockYellow =  slot.getIsFilled() && !slot.getIsRed() && iAmRed; // Yellow blocks red
-                    boolean blockRed = slot.getIsFilled() && slot.getIsRed() && !iAmRed; // Red blocks yellow
-                    if(!slot.getIsFilled() && lowestIndex == row)
-                    {
-                        return i + column; 
-                    }
-                    else if(blockYellow)
-                    {
-                        i++;
-                    }
-                    else if(blockRed)
-                    {
-                        i++;
-                    }
+                    //System.out.println("Yellow Vertical");
+                    return column;
+                }
+            }
+        }
+        return -1;
+    }
+    
+    public int checkDiagonalWin(boolean iAmRed, int column, int slot)
+    {
+        if(iAmRed)
+        {
+            if(column >= 3 && slot <= myGame.getRowCount() - 4) // RRRB top down
+            {
+                if(myGame.getColumn(column - 3).getSlot(slot + 3).getIsRed() && myGame.getColumn(column - 3).getSlot(slot + 3).getIsFilled() && myGame.getColumn(column - 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot + 2).getIsFilled() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsFilled())
+                {
+                    //System.out.println("Checking RRRB top down diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 3 && slot >= myGame.getRowCount() - 3) // RRRB bottom up
+            {
+                if(myGame.getColumn(column - 3).getSlot(slot - 3).getIsRed() && myGame.getColumn(column - 3).getSlot(slot - 3).getIsFilled() && myGame.getColumn(column - 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot - 2).getIsFilled() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsFilled())
+                {
+                    //System.out.println("Checking RRRB bottom up diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column <= myGame.getColumnCount() - 4 && slot <= myGame.getRowCount() - 4) // BRRR from top down
+            {
+                if(myGame.getColumn(column + 3).getSlot(slot + 3).getIsRed() && myGame.getColumn(column + 3).getSlot(slot + 3).getIsFilled() && myGame.getColumn(column + 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot + 2).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsFilled())
+                {
+                    //System.out.println("Checking BRRR top down diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column <= myGame.getColumnCount() - 4 && slot >= myGame.getRowCount() - 3) // BRRR from bottom up
+            {
+                if(myGame.getColumn(column + 3).getSlot(slot - 3).getIsRed() && myGame.getColumn(column + 3).getSlot(slot - 3).getIsFilled() && myGame.getColumn(column + 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot - 2).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsFilled())
+                {
+                    //System.out.println("Checking BRRR bottom up diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 1 && column <= myGame.getColumnCount() - 3 && slot >= 1 && slot <= myGame.getRowCount() - 3 ) // RBRR top down
+            {
+                if(myGame.getColumn(column - 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsFilled() && myGame.getColumn(column + 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot + 2).getIsFilled())
+                {
+                    //System.out.println("Checking RBRR top down diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 1 && column <= myGame.getColumnCount() - 3 && slot >= myGame.getRowCount() - 4 && slot <= myGame.getRowCount() - 2) // RBRR bottom up
+            {
+                if(myGame.getColumn(column - 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsFilled() && myGame.getColumn(column + 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot - 2).getIsFilled())
+                {
+                    //System.out.println("Checking RBRR bottom up diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 2 && column <= myGame.getColumnCount() - 2 && slot >= myGame.getRowCount() - 4 && slot <= myGame.getRowCount() - 2) // RRBR top down
+            {
+                if(myGame.getColumn(column - 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot - 2).getIsFilled() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsFilled())
+                {
+                    //System.out.println("Checking RRBR diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 2 && column <= myGame.getColumnCount() - 2 && slot >= myGame.getRowCount() - 4 && slot <= myGame.getRowCount() - 3) // RRBR bottom up
+            {
+                if(myGame.getColumn(column - 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot + 2).getIsFilled() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsFilled() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsFilled())
+                {
+                    //System.out.println("Checking RRBR diagonal at column " + column);
+                    return column;
+                }
+            }
+        } 
+        if(!iAmRed)
+        {
+            if(column >= 3 && slot <= myGame.getRowCount() - 4) // YYYB top down
+            {
+                if(!myGame.getColumn(column - 3).getSlot(slot + 3).getIsRed() && myGame.getColumn(column - 3).getSlot(slot + 3).getIsFilled() && !myGame.getColumn(column - 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot + 2).getIsFilled() && !myGame.getColumn(column - 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsFilled())
+                {
+                    //System.out.println("Checking YYYB top down diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 3 && slot >= myGame.getRowCount() - 3) // YYYB bottom up
+            {
+                if(!myGame.getColumn(column - 3).getSlot(slot - 3).getIsRed() && myGame.getColumn(column - 3).getSlot(slot - 3).getIsFilled() && !myGame.getColumn(column - 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot - 2).getIsFilled() && !myGame.getColumn(column - 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsFilled())
+                {
+                    //System.out.println("Checking YYYB bottom up diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column <= myGame.getColumnCount() - 4 && slot <= myGame.getRowCount() - 4) // BYYY from top down
+            {
+                if(!myGame.getColumn(column + 3).getSlot(slot + 3).getIsRed() && myGame.getColumn(column + 3).getSlot(slot + 3).getIsFilled() && !myGame.getColumn(column + 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot + 2).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsFilled())
+                {
+                    //System.out.println("Checking BYYY top down diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column <= myGame.getColumnCount() - 4 && slot >= myGame.getRowCount() - 3) // BYYY from bottom up
+            {
+                if(!myGame.getColumn(column + 3).getSlot(slot - 3).getIsRed() && myGame.getColumn(column + 3).getSlot(slot - 3).getIsFilled() && !myGame.getColumn(column + 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot - 2).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsFilled())
+                {
+                    //System.out.println("Checking BYYY bottom up diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 1 && column <= myGame.getColumnCount() - 3 && slot >= 1 && slot <= myGame.getRowCount() - 3) // YBYY top down
+            {
+                if(!myGame.getColumn(column - 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsFilled() && !myGame.getColumn(column + 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot + 2).getIsFilled())
+                {
+                    //System.out.println("Checking YBYY top down diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 1 && column <= myGame.getColumnCount() - 3 && slot >= myGame.getRowCount() - 4 && slot <= myGame.getRowCount() - 2) // YBYY bottom up
+            {
+                if(!myGame.getColumn(column - 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsFilled() && !myGame.getColumn(column + 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column + 2).getSlot(slot - 2).getIsFilled())
+                {
+                    //System.out.println("Checking YBYY bottom up diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 2 && column <= myGame.getColumnCount() - 2 && slot >= myGame.getRowCount() - 4 && slot <= myGame.getRowCount() - 2) // YYBY top down
+            {
+                if(!myGame.getColumn(column - 2).getSlot(slot - 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot - 2).getIsFilled() && !myGame.getColumn(column - 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot - 1).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot + 1).getIsFilled())
+                {
+                    //System.out.println("Checking YYBY diagonal at column " + column);
+                    return column;
+                }
+            }
+            if(column >= 2 && column <= myGame.getColumnCount() - 2 && slot >= myGame.getRowCount() - 4 && slot <= myGame.getRowCount() - 3) // YYBY bottom up
+            {
+                if(!myGame.getColumn(column - 2).getSlot(slot + 2).getIsRed() && myGame.getColumn(column - 2).getSlot(slot + 2).getIsFilled() && !myGame.getColumn(column - 1).getSlot(slot + 1).getIsRed() && myGame.getColumn(column - 1).getSlot(slot + 1).getIsFilled() && !myGame.getColumn(column + 1).getSlot(slot - 1).getIsRed() && myGame.getColumn(column + 1).getSlot(slot - 1).getIsFilled())
+                {
+                    //System.out.println("Checking YYBY diagonal at column " + column);
+                    return column;
                 }
             }
         }
